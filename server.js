@@ -3,7 +3,7 @@ const cors = require('cors');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-const db = require('./database'); // ◄ Importa la base de datos (Paso 4)
+const { getDb, saveDb } = require('./database'); // ◄ Importación actualizada para sql.js
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -14,7 +14,7 @@ if (!fs.existsSync('uploads')) {
 }
 
 app.use(cors());
-app.use(express.json()); // ◄ ¡Importante! Permite procesar JSON en las peticiones
+app.use(express.json()); // Permite procesar JSON en las peticiones
 
 // Servir archivos estáticos (imágenes subidas)
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
@@ -31,40 +31,75 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage: storage });
 
-// --- RUTAS API (CONECTADAS A LA BASE DE DATOS) ---
+// Helper para formatear dinámicamente la URL de las fotos según el host actual de Render/Local
+const formatFotoUrl = (fotoUrl, req) => {
+  if (!fotoUrl) return '';
+  const baseUrl = `${req.protocol}://${req.get('host')}`;
+  if (fotoUrl.startsWith('http')) {
+    return fotoUrl.replace(/^https?:\/\/[^\/]+/, baseUrl);
+  }
+  return `${baseUrl}${fotoUrl}`;
+};
+
+// --- RUTAS API (ADAPTADAS A SQL.JS ASÍNCRONO) ---
 
 // GET todos los espacios (con filtros)
-app.get('/api/espacios', (req, res) => {
+app.get('/api/espacios', async (req, res) => {
   const { piso, tipo, q } = req.query;
-  let query = 'SELECT * FROM espacios WHERE 1=1';
-  const params = [];
-
-  if (piso) {
-    query += ' AND piso = ?';
-    params.push(parseInt(piso));
-  }
-  if (tipo) {
-    query += ' AND tipo = ?';
-    params.push(tipo);
-  }
-  if (q) {
-    query += ' AND nombre LIKE ?';
-    params.push(`%${q}%`);
-  }
 
   try {
-    const espacios = db.prepare(query).all(...params);
-    res.json(espacios);
+    const db = await getDb();
+    let query = 'SELECT * FROM espacios WHERE 1=1';
+    const params = {};
+
+    if (piso) {
+      query += ' AND piso = :piso';
+      params[':piso'] = parseInt(piso);
+    }
+    if (tipo) {
+      query += ' AND tipo = :tipo';
+      params[':tipo'] = tipo;
+    }
+    if (q) {
+      query += ' AND nombre LIKE :q';
+      params[':q'] = `%${q}%`;
+    }
+
+    const stmt = db.prepare(query);
+    stmt.bind(params);
+
+    const espacios = [];
+    while (stmt.step()) {
+      espacios.push(stmt.getAsObject());
+    }
+    stmt.free();
+
+    const result = espacios.map(e => ({
+      ...e,
+      fotoUrl: formatFotoUrl(e.fotoUrl, req)
+    }));
+
+    res.json(result);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
 // GET espacio por ID
-app.get('/api/espacios/:id', (req, res) => {
+app.get('/api/espacios/:id', async (req, res) => {
   try {
-    const espacio = db.prepare('SELECT * FROM espacios WHERE id = ?').get(req.params.id);
-    if (espacio) {
+    const db = await getDb();
+    const stmt = db.prepare('SELECT * FROM espacios WHERE id = :id');
+    stmt.bind({ ':id': req.params.id });
+
+    let espacio = null;
+    if (stmt.step()) {
+      espacio = stmt.getAsObject();
+    }
+    stmt.free();
+
+    if (espacio && espacio.id) {
+      espacio.fotoUrl = formatFotoUrl(espacio.fotoUrl, req);
       res.json(espacio);
     } else {
       res.status(404).json({ mensaje: 'Espacio no encontrado' });
@@ -74,29 +109,45 @@ app.get('/api/espacios/:id', (req, res) => {
   }
 });
 
-// POST crear espacio (Los datos vienen en JSON enviados por tu App)
-app.post('/api/espacios', (req, res) => {
+// POST crear espacio
+app.post('/api/espacios', async (req, res) => {
   const { nombre, tipo, piso, descripcion, fotoUrl, indicaciones, bloque, coordenadaX, coordenadaY } = req.body;
 
   try {
+    const db = await getDb();
     const stmt = db.prepare(`
       INSERT INTO espacios (nombre, tipo, piso, descripcion, fotoUrl, indicaciones, bloque, coordenadaX, coordenadaY)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (:nombre, :tipo, :piso, :descripcion, :fotoUrl, :indicaciones, :bloque, :coordenadaX, :coordenadaY)
     `);
 
-    const info = stmt.run(
-      nombre,
-      tipo,
-      parseInt(piso),
-      descripcion || '',
-      fotoUrl || '',
-      indicaciones || '',
-      bloque,
-      coordenadaX || 0.5,
-      coordenadaY || 0.5
-    );
+    stmt.run({
+      ':nombre': nombre,
+      ':tipo': tipo,
+      ':piso': parseInt(piso),
+      ':descripcion': descripcion || '',
+      ':fotoUrl': fotoUrl || '',
+      ':indicaciones': indicaciones || '',
+      ':bloque': bloque,
+      ':coordenadaX': coordenadaX || 0.5,
+      ':coordenadaY': coordenadaY || 0.5
+    });
+    stmt.free();
 
-    const nuevo = db.prepare('SELECT * FROM espacios WHERE id = ?').get(info.lastInsertRowid);
+    // Guardar cambios en el almacenamiento persistente
+    await saveDb();
+
+    // Obtener el último ID insertado usando la función last_insert_rowid() de SQLite
+    const idStmt = db.prepare('SELECT * FROM espacios WHERE id = last_insert_rowid()');
+    let nuevo = null;
+    if (idStmt.step()) {
+      nuevo = idStmt.getAsObject();
+    }
+    idStmt.free();
+
+    if (nuevo) {
+      nuevo.fotoUrl = formatFotoUrl(nuevo.fotoUrl, req);
+    }
+
     res.status(201).json(nuevo);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -104,20 +155,47 @@ app.post('/api/espacios', (req, res) => {
 });
 
 // PUT actualizar espacio
-app.put('/api/espacios/:id', (req, res) => {
+app.put('/api/espacios/:id', async (req, res) => {
   const { nombre, tipo, piso, descripcion, fotoUrl, indicaciones, bloque, coordenadaX, coordenadaY } = req.body;
 
   try {
+    const db = await getDb();
     const stmt = db.prepare(`
       UPDATE espacios
-      SET nombre=?, tipo=?, piso=?, descripcion=?, fotoUrl=?, indicaciones=?, bloque=?, coordenadaX=?, coordenadaY=?
-      WHERE id=?
+      SET nombre = :nombre, tipo = :tipo, piso = :piso, descripcion = :descripcion,
+          fotoUrl = :fotoUrl, indicaciones = :indicaciones, bloque = :bloque,
+          coordenadaX = :coordenadaX, coordenadaY = :coordenadaY
+      WHERE id = :id
     `);
 
-    stmt.run(nombre, tipo, parseInt(piso), descripcion, fotoUrl, indicaciones, bloque, coordenadaX, coordenadaY, req.params.id);
+    stmt.run({
+      ':nombre': nombre,
+      ':tipo': tipo,
+      ':piso': parseInt(piso),
+      ':descripcion': descripcion,
+      ':fotoUrl': fotoUrl,
+      ':indicaciones': indicaciones,
+      ':bloque': bloque,
+      ':coordenadaX': coordenadaX,
+      ':coordenadaY': coordenadaY,
+      ':id': req.params.id
+    });
+    stmt.free();
 
-    const actualizado = db.prepare('SELECT * FROM espacios WHERE id = ?').get(req.params.id);
-    if (actualizado) {
+    // Guardar cambios en el almacenamiento persistente
+    await saveDb();
+
+    // Buscar el elemento actualizado para responder
+    const checkStmt = db.prepare('SELECT * FROM espacios WHERE id = :id');
+    checkStmt.bind({ ':id': req.params.id });
+    let actualizado = null;
+    if (checkStmt.step()) {
+      actualizado = checkStmt.getAsObject();
+    }
+    checkStmt.free();
+
+    if (actualizado && actualizado.id) {
+      actualizado.fotoUrl = formatFotoUrl(actualizado.fotoUrl, req);
       res.json(actualizado);
     } else {
       res.status(404).json({ mensaje: 'Espacio no encontrado' });
@@ -128,14 +206,28 @@ app.put('/api/espacios/:id', (req, res) => {
 });
 
 // DELETE eliminar espacio
-app.delete('/api/espacios/:id', (req, res) => {
+app.delete('/api/espacios/:id', async (req, res) => {
   try {
-    const resultado = db.prepare('DELETE FROM espacios WHERE id = ?').run(req.params.id);
-    if (resultado.changes > 0) {
-      res.status(204).send();
-    } else {
-      res.status(404).json({ mensaje: 'Espacio no encontrado' });
+    const db = await getDb();
+
+    // Verificamos primero si existe para poder simular las filas afectadas
+    const checkStmt = db.prepare('SELECT id FROM espacios WHERE id = :id');
+    checkStmt.bind({ ':id': req.params.id });
+    const existe = checkStmt.step();
+    checkStmt.free();
+
+    if (!existe) {
+      return res.status(404).json({ mensaje: 'Espacio no encontrado' });
     }
+
+    const stmt = db.prepare('DELETE FROM espacios WHERE id = :id');
+    stmt.run({ ':id': req.params.id });
+    stmt.free();
+
+    // Guardar cambios en el almacenamiento persistente
+    await saveDb();
+
+    res.status(204).send();
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -147,14 +239,11 @@ app.post('/api/upload', upload.single('foto'), (req, res) => {
     return res.status(400).json({ error: 'No se ha adjuntado ningún archivo.' });
   }
 
-  // Construye la URL pública del archivo subido
   const url = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
   res.json({ url });
 });
 
 // Iniciar servidor
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`✅ Backend corriendo en http://0.0.0.0:${PORT}`);
-  console.log(`📱 Emulador Android puede usar: http://10.0.2.2:${PORT}`);
-  console.log(`💻 Navegador: http://localhost:${PORT}`);
+  console.log(`✅ Backend corriendo en el puerto: ${PORT}`);
 });
