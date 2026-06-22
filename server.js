@@ -242,7 +242,75 @@ app.post('/api/upload', upload.single('foto'), (req, res) => {
   const url = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
   res.json({ url });
 });
+// Endpoint para sembrar la base de datos (puedes visitarlo en el navegador: /api/seed)
+app.get('/api/seed', async (req, res) => {
+  try {
+    const db = await getDb();
 
+    // 1. Asegurar que la tabla exista con la estructura correcta
+    db.run(`
+      CREATE TABLE IF NOT EXISTS espacios (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        nombre TEXT NOT NULL,
+        tipo TEXT NOT NULL,
+        piso INTEGER NOT NULL,
+        descripcion TEXT,
+        fotoUrl TEXT,
+        indicaciones TEXT,
+        bloque TEXT NOT NULL,
+        coordenadaX REAL DEFAULT 0.5,
+        coordenadaY REAL DEFAULT 0.5
+      )
+    `);
+
+    // [OPCIONAL] Limpiar la tabla antes de sembrar para evitar duplicados si se recarga la ruta
+    db.run("DELETE FROM espacios");
+
+    // 2. Definir los datos iniciales (Aquí puedes expandir el array con todos tus registros de seed.js)
+    const espacios = [
+      { nombre: "Administración de edificio facu", tipo: "Oficina", piso: 0, bloque: "A", descripcion: "", fotoUrl: "", indicaciones: "" },
+      { nombre: "Dirección de carrera", tipo: "Oficina", piso: 0, bloque: "A", descripcion: "", fotoUrl: "", indicaciones: "" },
+      { nombre: "Departamento de talentos humanos", tipo: "Oficina", piso: 0, bloque: "A", descripcion: "", fotoUrl: "", indicaciones: "" },
+      { nombre: "Sala de docentes", tipo: "Oficina", piso: 0, bloque: "A", descripcion: "", fotoUrl: "", indicaciones: "" },
+      { nombre: "Área de investigación", tipo: "Oficina", piso: 0, bloque: "A", descripcion: "", fotoUrl: "", indicaciones: "" },
+      { nombre: "Decanato", tipo: "Oficina", piso: 0, bloque: "A", descripcion: "", fotoUrl: "", indicaciones: "" },
+      { nombre: "Sub decanato", tipo: "Oficina", piso: 0, bloque: "A", descripcion: "", fotoUrl: "", indicaciones: "" },
+      { nombre: "Secretaría", tipo: "Oficina", piso: 0, bloque: "A", descripcion: "", fotoUrl: "", indicaciones: "" },
+      // ... ◄ REEMPLAZA O PEGA AQUÍ EL RESTO DE LOS OBJETOS DE TU SEED.JS ORIGINAL ...
+    ];
+
+    // 3. Preparar la consulta usando el formato de sql.js (:parametro)
+    const insert = db.prepare(`
+      INSERT INTO espacios (nombre, tipo, piso, descripcion, fotoUrl, indicaciones, bloque, coordenadaX, coordenadaY)
+      VALUES (:nombre, :tipo, :piso, :descripcion, :fotoUrl, :indicaciones, :bloque, :coordenadaX, :coordenadaY)
+    `);
+
+    // 4. Ejecutar el bucle de inserciones de forma segura
+    for (const e of espacios) {
+      insert.run({
+        ':nombre': e.nombre,
+        ':tipo': e.tipo,
+        ':piso': e.piso,
+        ':descripcion': e.descripcion || '',
+        ':fotoUrl': e.fotoUrl || '',
+        ':indicaciones': e.indicaciones || '',
+        ':bloque': e.bloque,
+        ':coordenadaX': e.coordenadaX || 0.5,
+        ':coordenadaY': e.coordenadaY || 0.5
+      });
+    }
+
+    // 5. Liberar el statement de la memoria
+    insert.free();
+
+    // 6. Guardar de forma persistente los cambios en tu archivo/proveedor de base de datos
+    await saveDb();
+
+    res.send("✅ Base de datos sembrada correctamente con los datos iniciales.");
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 // Iniciar servidor
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`✅ Backend corriendo en el puerto: ${PORT}`);
