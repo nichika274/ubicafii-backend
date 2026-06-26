@@ -84,10 +84,24 @@ exports.seed = async (req, res) => {
   try {
     const db = await getDb();
 
-    // Limpiar tabla antes de insertar
-db.run("DELETE FROM espacios");
+    // Log de control y recreación estructural limpia de la tabla
+    console.log("RESET TABLA ESPACIOS");
+    db.run("DROP TABLE IF EXISTS espacios");
+    db.run(`
+      CREATE TABLE espacios (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        nombre TEXT,
+        tipo TEXT,
+        piso INTEGER,
+        descripcion TEXT,
+        fotoUrl TEXT,
+        indicaciones TEXT,
+        bloque TEXT,
+        coordenadaX REAL,
+        coordenadaY REAL
+      )
+    `);
 
-db.run("DELETE FROM sqlite_sequence WHERE name='espacios'");
     const espacios = [
       // ─── Planta baja (piso 0) ─────────────────────────────
       // Bloque A
@@ -116,24 +130,17 @@ db.run("DELETE FROM sqlite_sequence WHERE name='espacios'");
         coordenadaX: 0.88,
         coordenadaY: 0.12
       },
-        {
-         nombre: 'Aula 14C-006',
-         tipo: 'Aula',
-         piso:0,
-         bloque:'C',
-
-         descripcion:
-         'Aula de clases ubicada en el Bloque C, Planta Baja. Cuenta con proyector, pizarrón y aire acondicionado.',
-
-         fotoUrl:
-         'https://ubicafii-backend.onrender.com/uploads/1781567902958-foto.jpg',
-
-         indicaciones:
-         'Al ingresar al Bloque C, dirígete hacia la izquierda.',
-
-         coordenadaX:0.76,
-         coordenadaY:0.16
-        },
+      {
+        nombre: 'Aula 14C-006',
+        tipo: 'Aula',
+        piso: 0,
+        bloque: 'C',
+        descripcion: 'Aula de clases ubicada en el Bloque C, Planta Baja. Cuenta con proyector, pizarrón y aire acondicionado.',
+        fotoUrl: 'https://ubicafii-backend.onrender.com/uploads/1781567902958-foto.jpg',
+        indicaciones: 'Al ingresar al Bloque C, dirígete hacia la izquierda.',
+        coordenadaX: 0.76,
+        coordenadaY: 0.16
+      },
       { nombre: 'Aula 14C-005', tipo: 'Aula', piso: 0, bloque: 'C', descripcion: '', fotoUrl: '', indicaciones: '' },
       {
         nombre: 'Baños Bloque C (Planta baja)',
