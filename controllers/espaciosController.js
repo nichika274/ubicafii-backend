@@ -85,8 +85,9 @@ exports.seed = async (req, res) => {
     const db = await getDb();
 
     // Limpiar tabla antes de insertar
-    db.run("DELETE FROM espacios");
+db.run("DELETE FROM espacios");
 
+db.run("DELETE FROM sqlite_sequence WHERE name='espacios'");
     const espacios = [
       // ─── Planta baja (piso 0) ─────────────────────────────
       // Bloque A
