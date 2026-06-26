@@ -3,7 +3,6 @@ const router = express.Router();
 
 const ctrl = require('../controllers/espaciosController');
 
-// seed arriba para que no choque con /:id
 router.get('/seed', ctrl.seed);
 
 router.get('/', ctrl.getAll);
