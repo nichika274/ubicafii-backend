@@ -266,70 +266,42 @@ exports.restaurarFotos = async (req,res)=>{
  const db = await getDb();
 
  const fotos = [
-   {
-     id:13,
-     fotoUrl:"https://ubicafii-backend.onrender.com/uploads/1781311234-foto.jpg"
-   },
-   {
-     id:14,
-     fotoUrl:"https://ubicafii-backend.onrender.com/uploads/1781567902958-foto.jpg"
-   },
-   {
-     id:15,
-     fotoUrl:"https://ubicafii-backend.onrender.com/uploads/1781576332531-foto.jpg"
-   },
-   {
-     id:16,
-     fotoUrl:"https://ubicafii-backend.onrender.com/uploads/1781643504558-foto.jpg"
-   },
-   {
-     id:17,
-     fotoUrl:"https://ubicafii-backend.onrender.com/uploads/1781643628736-foto.jpg"
-   },
-   {
-     id:18,
-     fotoUrl:"https://ubicafii-backend.onrender.com/uploads/1781643780641-foto.jpg"
-   },
-   {
-     id:35,
-     fotoUrl:"https://ubicafii-backend.onrender.com/uploads/1781644096002-foto.jpg"
-   },
-   {
-     id:36,
-     fotoUrl:"https://ubicafii-backend.onrender.com/uploads/1781644353222-foto.jpg"
-   },
-   {
-     id:37,
-     fotoUrl:"https://ubicafii-backend.onrender.com/uploads/1781644548964-foto.jpg"
-   },
-   {
-     id:38,
-     fotoUrl:"https://ubicafii-backend.onrender.com/uploads/1781644762508-foto.jpg"
-   },
-   {
-     id:39,
-     fotoUrl:"https://ubicafii-backend.onrender.com/uploads/1781645113289-foto.jpg"
-   },
-   {
-     id:40,
-     fotoUrl:"https://ubicafii-backend.onrender.com/uploads/1781645206419-foto.jpg"
-   },
-   {
-     id:41,
-     fotoUrl:"https://ubicafii-backend.onrender.com/uploads/1781474939578-foto.jpg"
-   },
-   {
-     id:42,
-     fotoUrl:"https://ubicafii-backend.onrender.com/uploads/1781645339024-foto.jpg"
-   },
-   {
-     id:43,
-     fotoUrl:"https://ubicafii-backend.onrender.com/uploads/1781645304329-foto.jpg"
-   },
-   {
-     id:44,
-     fotoUrl:"https://ubicafii-backend.onrender.com/uploads/1781645375575-foto.jpg"
-   }
+{
+ id:70,
+ fotoUrl:"https://ubicafii-backend.onrender.com/uploads/1781645693112-foto.jpg"
+},
+{
+ id:71,
+ fotoUrl:"https://ubicafii-backend.onrender.com/uploads/1781645790450-foto.jpg"
+},
+{
+ id:72,
+ fotoUrl:"https://ubicafii-backend.onrender.com/uploads/1781645573448-foto.jpg"
+},
+{
+ id:73,
+ fotoUrl:"https://ubicafii-backend.onrender.com/uploads/1781645855469-foto.jpg"
+},
+{
+ id:74,
+ fotoUrl:"https://ubicafii-backend.onrender.com/uploads/1781645942165-foto.jpg"
+},
+{
+ id:75,
+ fotoUrl:"https://ubicafii-backend.onrender.com/uploads/1781646036739-foto.jpg"
+},
+{
+ id:76,
+ fotoUrl:"https://ubicafii-backend.onrender.com/uploads/1781646151216-foto.jpg"
+},
+{
+ id:77,
+ fotoUrl:"https://ubicafii-backend.onrender.com/uploads/1781646213395-foto.jpg"
+},
+{
+ id:78,
+ fotoUrl:"https://ubicafii-backend.onrender.com/uploads/1781646256398-foto.jpg"
+}
  ];
 
  fotos.forEach(f=>{
