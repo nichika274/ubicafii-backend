@@ -269,7 +269,7 @@ exports.restaurarDatos = async (req,res)=>{
 
   {
    id:13,
-   fotoUrl:"https://ubicafii-backend.onrender.com/uploads/1781311234-foto.jpg",
+   fotoUrl:"https://ubicafii-backend.onrender.com/uploads/1781559314993-foto.jpg",
    descripcion:"Aula de clases ubicada en el Bloque C, Planta Baja, hacia el lado izquierdo. Tiene una capacidad estimada para 40 estudiantes y está equipada con proyector, pizarrón y aire acondicionado.",
    indicaciones:"Al ingresar al Bloque C, en la planta baja, dirígete hacia la izquierda."
   },
@@ -281,6 +281,10 @@ exports.restaurarDatos = async (req,res)=>{
    indicaciones:"Al ingresar al Bloque C, dirígete hacia la izquierda."
   },
 
+  {
+   id:15,
+   fotoUrl:"https://ubicafii-backend.onrender.com/uploads/1781643365903-foto.jpg"
+  },
 
   {
    id:16,
@@ -289,6 +293,20 @@ exports.restaurarDatos = async (req,res)=>{
    indicaciones:"Fondo del pasillo central."
   },
 
+    {
+     id:17,
+     fotoUrl:"https://ubicafii-backend.onrender.com/uploads/1781643628736-foto.jpg"
+    },
+
+  {
+   id:18,
+   fotoUrl:"https://ubicafii-backend.onrender.com/uploads/1781643780641-foto.jpg"
+  },
+
+    {
+    id:35,
+    fotoUrl:"https://ubicafii-backend.onrender.com/uploads/1781644330887-foto.jpg"
+    },
 
   {
    id:36,
