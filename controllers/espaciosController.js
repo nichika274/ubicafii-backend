@@ -305,7 +305,19 @@ exports.restaurarDatos = async (req, res) => {
       { id: 77, fotoUrl: "https://ubicafii-backend.onrender.com/uploads/1781646213395-foto.jpg" },
       { id: 78, fotoUrl: "https://ubicafii-backend.onrender.com/uploads/1781646256398-foto.jpg" }
     ];
-
+    exports.renombrarBloqueD = async (req, res) => {
+      try {
+        const db = await getDb();
+        await db.execute({
+          sql: "UPDATE espacios SET bloque = 'G' WHERE bloque = 'D'",
+          args: []
+        });
+        res.json({ mensaje: "Bloque D renombrado a G en todos los espacios" });
+      } catch (error) {
+        res.status(500).json({ error: error.message });
+      }
+    };
+    
     for (const d of datos) {
       await db.execute({
         sql: `UPDATE espacios SET fotoUrl = ?, descripcion = COALESCE(NULLIF(?,''), descripcion), indicaciones = COALESCE(NULLIF(?,''), indicaciones) WHERE id = ?`,
