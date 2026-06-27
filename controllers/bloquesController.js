@@ -37,7 +37,7 @@ exports.seed = async (req, res) => {
     const bloques = [
       { bloque: 'A', mapaX: 0.12, mapaY: 0.18, mapaWidth: 0.11, mapaHeight: 0.30 },
       { bloque: 'B', mapaX: 0.24, mapaY: 0.18, mapaWidth: 0.11, mapaHeight: 0.30 },
-      { bloque: 'C', mapaX: 0.459, mapaY: 0.241, mapaWidth: 0.0658, mapaHeight: 0.259 },
+      { bloque: 'C', mapaX: 0.459, mapaY: 0.2508, mapaWidth: 0.0658, mapaHeight: 0.259 }
       { bloque: 'D', mapaX: 0.62, mapaY: 0.20, mapaWidth: 0.18, mapaHeight: 0.34 },
       { bloque: 'E', mapaX: 0.45, mapaY: 0.55, mapaWidth: 0.12, mapaHeight: 0.25 },
       { bloque: 'F', mapaX: 0.60, mapaY: 0.55, mapaWidth: 0.12, mapaHeight: 0.25 }
