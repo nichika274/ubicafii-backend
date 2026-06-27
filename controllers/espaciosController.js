@@ -1,4 +1,4 @@
-const { getDb, saveDb } = require('../database');
+const { getDb } = require('../database');
 const formatFotoUrl = require('../utils/formatFotoUrl');
 
 // GET todos
@@ -7,13 +7,13 @@ exports.getAll = async (req, res) => {
     const { piso, tipo, q } = req.query;
     const db = await getDb();
     let sql = 'SELECT * FROM espacios WHERE 1=1';
-    const params = [];
+    const args = [];
 
-    if (piso) { sql += ' AND piso = ?'; params.push(parseInt(piso)); }
-    if (tipo) { sql += ' AND tipo = ?'; params.push(tipo); }
-    if (q)    { sql += ' AND nombre LIKE ?'; params.push(`%${q}%`); }
+    if (piso) { sql += ' AND piso = ?'; args.push(parseInt(piso)); }
+    if (tipo) { sql += ' AND tipo = ?'; args.push(tipo); }
+    if (q)    { sql += ' AND nombre LIKE ?'; args.push(`%${q}%`); }
 
-    const result = await db.execute({ sql, args: params });
+    const result = await db.execute({ sql, args });
     const espacios = result.rows.map(e => ({ ...e, fotoUrl: formatFotoUrl(e.fotoUrl, req) }));
     res.json(espacios);
   } catch (error) {
@@ -320,15 +320,7 @@ exports.restaurarDatos = async (req, res) => {
       { id: 78, fotoUrl: "https://ubicafii-backend.onrender.com/uploads/1781646256398-foto.jpg" }
     ];
 
-    const stmt = db.prepare(`
-      UPDATE espacios SET
-        fotoUrl = :fotoUrl,
-        descripcion = CASE WHEN :descripcion != '' THEN :descripcion ELSE descripcion END,
-        indicaciones = CASE WHEN :indicaciones != '' THEN :indicaciones ELSE indicaciones END
-      WHERE id = :id
-    `);
-
-for (const d of datos) {
+    for (const d of datos) {
       await db.execute({
         sql: `UPDATE espacios SET fotoUrl = ?, descripcion = COALESCE(NULLIF(?,''), descripcion), indicaciones = COALESCE(NULLIF(?,''), indicaciones) WHERE id = ?`,
         args: [d.fotoUrl || '', d.descripcion || '', d.indicaciones || '', d.id]
@@ -337,6 +329,7 @@ for (const d of datos) {
 
     res.json({ mensaje: "Datos restaurados correctamente", cantidad: datos.length });
   } catch (e) {
+    console.log(e);
     res.status(500).json({ error: e.message });
   }
 };
