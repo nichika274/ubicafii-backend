@@ -88,7 +88,7 @@ exports.update = async (req, res) => {
 };
 
 // DELETE eliminar
-exports.remove = async (req, res) => {
+exports.delete = async (req, res) => {
   try {
     const db = await getDb();
     await db.execute({
