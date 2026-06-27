@@ -102,27 +102,13 @@ exports.delete = async (req, res) => {
 };
 
 // GET /api/espacios/seed
-/*exports.seed = async (req, res) => {
-  console.log("ENTRO AL SEED NUEVO");
+// POST /api/espacios/seed (¡ejecutar solo una vez!)
+exports.seed = async (req, res) => {
   try {
     const db = await getDb();
 
-    console.log("RESET TABLA ESPACIOS");
-    db.run("DROP TABLE IF EXISTS espacios");
-    db.run(`
-      CREATE TABLE espacios (
-        id INTEGER PRIMARY KEY,
-        nombre TEXT,
-        tipo TEXT,
-        piso INTEGER,
-        descripcion TEXT,
-        fotoUrl TEXT,
-        indicaciones TEXT,
-        bloque TEXT,
-        coordenadaX REAL,
-        coordenadaY REAL
-      )
-    `);
+    // Limpiar la tabla (solo borramos los datos, no la estructura)
+    await db.execute('DELETE FROM espacios');
 
     const espacios = [
       // ─── Planta baja (piso 0) ─────────────────────────────
@@ -147,7 +133,7 @@ exports.delete = async (req, res) => {
         piso: 0,
         bloque: 'C',
         descripcion: 'Aula de clases ubicada en el Bloque C, Planta Baja, hacia el lado izquierdo. Tiene una capacidad estimada para 40 estudiantes y está equipada con proyector, pizarrón y aire acondicionado.',
-        fotoUrl: 'https://ubicafii-backend.onrender.com/uploads/1781311234-foto.jpg',
+        fotoUrl: 'https://ubicafii-backend.onrender.com/uploads/1781559314993-foto.jpg',   // ← URL correcta
         indicaciones: 'Al ingresar al Bloque C, en la planta baja, dirígete hacia la izquierda.',
         coordenadaX: 0.88,
         coordenadaY: 0.12
@@ -251,36 +237,31 @@ exports.delete = async (req, res) => {
       { id: 78, nombre: 'Laboratorio de cómputo 14C-204', tipo: 'Laboratorio', piso: 2, bloque: 'C', descripcion: '', fotoUrl: '', indicaciones: '' }
     ];
 
-    espacios.forEach(e => {
-      db.run(
-        `INSERT INTO espacios
-        (id, nombre, tipo, piso, descripcion, fotoUrl, indicaciones, bloque, coordenadaX, coordenadaY)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [
+    for (const e of espacios) {
+      await db.execute({
+        sql: `INSERT INTO espacios (id, nombre, tipo, piso, descripcion, fotoUrl, indicaciones, bloque, coordenadaX, coordenadaY)
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        args: [
           e.id,
           e.nombre,
           e.tipo,
           e.piso,
-          e.descripcion || "",
-          e.fotoUrl || "",
-          e.indicaciones || "",
+          e.descripcion || '',
+          e.fotoUrl || '',
+          e.indicaciones || '',
           e.bloque,
           e.coordenadaX ?? 0.5,
           e.coordenadaY ?? 0.3
         ]
-      );
-    });
+      });
+    }
 
-    await saveDb();
-    res.json({ mensaje: "Seed de espacios creado con IDs estáticos", cantidad: espacios.length });
+    res.json({ mensaje: "Seed ejecutado correctamente", cantidad: espacios.length });
   } catch (error) {
-    console.error("ERROR SEED ESPACIOS:", error);
-    res.status(500).json({
-      error: "Error ejecutando seed",
-      detalle: error.message
-    });
+    console.error("Error en seed:", error);
+    res.status(500).json({ error: error.message });
   }
-};*/
+};
 
 // POST restaurar-datos
 exports.restaurarDatos = async (req, res) => {
