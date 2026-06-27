@@ -3,11 +3,13 @@ const router = express.Router();
 
 const ctrl = require('../controllers/espaciosController');
 
+
+// IMPORTANTE: rutas específicas primero
+router.post('/restaurar-fotos', ctrl.restaurarFotos);
+
 router.get('/seed', ctrl.seed);
 
 router.get('/', ctrl.getAll);
-
-router.post('/restaurar-fotos', ctrl.restaurarFotos);
 
 router.get('/:id', ctrl.getById);
 
@@ -16,5 +18,6 @@ router.post('/', ctrl.create);
 router.put('/:id', ctrl.update);
 
 router.delete('/:id', ctrl.delete);
+
 
 module.exports = router;
