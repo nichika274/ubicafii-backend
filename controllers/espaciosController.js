@@ -84,7 +84,6 @@ exports.seed = async (req, res) => {
   try {
     const db = await getDb();
 
-    // Log de control y recreación estructural estática de la tabla
     console.log("RESET TABLA ESPACIOS");
     db.run("DROP TABLE IF EXISTS espacios");
     db.run(`
@@ -104,7 +103,6 @@ exports.seed = async (req, res) => {
 
     const espacios = [
       // ─── Planta baja (piso 0) ─────────────────────────────
-      // Bloque A
       { id: 1, nombre: 'Administración de edificio facu', tipo: 'Oficina', piso: 0, bloque: 'A', descripcion: '', fotoUrl: '', indicaciones: '' },
       { id: 2, nombre: 'Dirección de carrera', tipo: 'Oficina', piso: 0, bloque: 'A', descripcion: '', fotoUrl: '', indicaciones: '' },
       { id: 3, nombre: 'Departamento de talentos humanos', tipo: 'Oficina', piso: 0, bloque: 'A', descripcion: '', fotoUrl: '', indicaciones: '' },
@@ -113,12 +111,12 @@ exports.seed = async (req, res) => {
       { id: 6, nombre: 'Decanato', tipo: 'Oficina', piso: 0, bloque: 'A', descripcion: '', fotoUrl: '', indicaciones: '' },
       { id: 7, nombre: 'Sub decanato', tipo: 'Oficina', piso: 0, bloque: 'A', descripcion: '', fotoUrl: '', indicaciones: '' },
       { id: 8, nombre: 'Secretaría', tipo: 'Oficina', piso: 0, bloque: 'A', descripcion: '', fotoUrl: '', indicaciones: '' },
-      // Bloque B
+
       { id: 9, nombre: 'Sala de conferencias', tipo: 'Oficina', piso: 0, bloque: 'B', descripcion: '', fotoUrl: '', indicaciones: '' },
       { id: 10, nombre: 'Laboratorio física 1 (14b-001)', tipo: 'Laboratorio', piso: 0, bloque: 'B', descripcion: '', fotoUrl: '', indicaciones: '' },
       { id: 11, nombre: 'Baños Bloque B (Planta baja)', tipo: 'Baño', piso: 0, bloque: 'B', descripcion: '', fotoUrl: '', indicaciones: '' },
       { id: 12, nombre: 'Laboratorio física 2 (14b-001)', tipo: 'Laboratorio', piso: 0, bloque: 'B', descripcion: '', fotoUrl: '', indicaciones: '' },
-      // Bloque C
+
       {
         id: 13,
         nombre: 'Aula 14C-004',
@@ -158,7 +156,7 @@ exports.seed = async (req, res) => {
       },
       { id: 17, nombre: 'Aula 14C-003', tipo: 'Aula', piso: 0, bloque: 'C', descripcion: '', fotoUrl: '', indicaciones: '' },
       { id: 18, nombre: 'Fueiss', tipo: 'Oficina', piso: 0, bloque: 'C', descripcion: '', fotoUrl: '', indicaciones: '' },
-      // Bloque D
+
       { id: 19, nombre: 'Aula 14D-001', tipo: 'Aula', piso: 0, bloque: 'D', descripcion: '', fotoUrl: '', indicaciones: '' },
       { id: 20, nombre: 'Aula 14D-002', tipo: 'Aula', piso: 0, bloque: 'D', descripcion: '', fotoUrl: '', indicaciones: '' },
       { id: 21, nombre: 'Aula 14D-003', tipo: 'Aula', piso: 0, bloque: 'D', descripcion: '', fotoUrl: '', indicaciones: '' },
@@ -169,19 +167,18 @@ exports.seed = async (req, res) => {
       { id: 26, nombre: 'Aula 14D-008', tipo: 'Aula', piso: 0, bloque: 'D', descripcion: '', fotoUrl: '', indicaciones: '' },
 
       // ─── Primer piso (piso 1) ─────────────────────────────
-      // Bloque A
       { id: 27, nombre: 'Baños Bloque A (Piso 1)', tipo: 'Baño', piso: 1, bloque: 'A', descripcion: '', fotoUrl: '', indicaciones: '' },
       { id: 28, nombre: 'Laboratorio de cómputo 14A-101', tipo: 'Laboratorio', piso: 1, bloque: 'A', descripcion: '', fotoUrl: '', indicaciones: '' },
       { id: 29, nombre: 'Instituto de posgrado e investigación educación continua', tipo: 'Oficina', piso: 1, bloque: 'A', descripcion: '', fotoUrl: '', indicaciones: '' },
-      // Bloque B
+
       { id: 30, nombre: 'Aula 14B-101', tipo: 'Aula', piso: 1, bloque: 'B', descripcion: '', fotoUrl: '', indicaciones: '' },
       { id: 31, nombre: 'Laboratorio de cómputo 14B-101', tipo: 'Laboratorio', piso: 1, bloque: 'B', descripcion: '', fotoUrl: '', indicaciones: '' },
       { id: 32, nombre: 'Formación académica', tipo: 'Oficina', piso: 1, bloque: 'B', descripcion: '', fotoUrl: '', indicaciones: '' },
       { id: 33, nombre: 'Aula 14B-102', tipo: 'Aula', piso: 1, bloque: 'B', descripcion: '', fotoUrl: '', indicaciones: '' },
       { id: 34, nombre: 'Aula 14B-103', tipo: 'Aula', piso: 1, bloque: 'B', descripcion: '', fotoUrl: '', indicaciones: '' },
-      // Bloque C
+
       { id: 35, nombre: 'Aula 14C-101', tipo: 'Aula', piso: 1, bloque: 'C', descripcion: '', fotoUrl: '', indicaciones: '' },
-      { id: 36, nombre: 'Aula 14C-102', tipo: 'Aula', piso: 1, bloque: 'C', descripcion: '', fotoUrl: '', indicaciones: '' },
+      { id: 36, nickname: 'Aula 14C-102', nombre: 'Aula 14C-102', tipo: 'Aula', piso: 1, bloque: 'C', descripcion: '', fotoUrl: '', indicaciones: '' },
       { id: 37, nombre: 'Laboratorio de cómputo 14C-101', tipo: 'Laboratorio', piso: 1, bloque: 'C', descripcion: '', fotoUrl: '', indicaciones: '' },
       { id: 38, nombre: 'Laboratorio de cómputo 14C-102', tipo: 'Laboratorio', piso: 1, bloque: 'C', descripcion: '', fotoUrl: '', indicaciones: '' },
       { id: 39, nombre: 'Baños Bloque C (Piso 1)', tipo: 'Baño', piso: 1, bloque: 'C', descripcion: '', fotoUrl: '', indicaciones: '' },
@@ -190,7 +187,7 @@ exports.seed = async (req, res) => {
       { id: 42, nombre: 'Vinculación con la sociedad y bienestar estudiantil', tipo: 'Oficina', piso: 1, bloque: 'C', descripcion: '', fotoUrl: '', indicaciones: '' },
       { id: 43, nombre: 'Sala de profesores', tipo: 'Oficina', piso: 1, bloque: 'C', descripcion: '', fotoUrl: '', indicaciones: '' },
       { id: 44, nombre: 'Departamento técnico', tipo: 'Oficina', piso: 1, bloque: 'C', descripcion: '', fotoUrl: '', indicaciones: '' },
-      // Bloque D
+
       { id: 45, nombre: 'Aula 14D-101', tipo: 'Aula', piso: 1, bloque: 'D', descripcion: '', fotoUrl: '', indicaciones: '' },
       { id: 46, nombre: 'Aula 14D-102', tipo: 'Aula', piso: 1, bloque: 'D', descripcion: '', fotoUrl: '', indicaciones: '' },
       { id: 47, nombre: 'Aula 14D-103', tipo: 'Aula', piso: 1, bloque: 'D', descripcion: '', fotoUrl: '', indicaciones: '' },
@@ -201,7 +198,6 @@ exports.seed = async (req, res) => {
       { id: 52, nombre: 'Aula 14D-108', tipo: 'Aula', piso: 1, bloque: 'D', descripcion: '', fotoUrl: '', indicaciones: '' },
 
       // ─── Segundo piso (piso 2) ─────────────────────────────
-      // Bloque A
       { id: 53, nombre: 'Sala de docentes (Piso 2)', tipo: 'Oficina', piso: 2, bloque: 'A', descripcion: '', fotoUrl: '', indicaciones: '' },
       { id: 54, nombre: 'Aula 14A-203', tipo: 'Aula', piso: 2, bloque: 'A', descripcion: '', fotoUrl: '', indicaciones: '' },
       { id: 55, nombre: 'Aula 14A-204', tipo: 'Aula', piso: 2, bloque: 'A', descripcion: '', fotoUrl: '', indicaciones: '' },
@@ -214,13 +210,13 @@ exports.seed = async (req, res) => {
       { id: 62, nombre: 'Dirección de carrera de telemática', tipo: 'Oficina', piso: 2, bloque: 'A', descripcion: '', fotoUrl: '', indicaciones: '' },
       { id: 63, nombre: 'Laboratorio de cómputo 14A-202', tipo: 'Laboratorio', piso: 2, bloque: 'A', descripcion: '', fotoUrl: '', indicaciones: '' },
       { id: 64, nombre: 'Aula 14A-202', tipo: 'Aula', piso: 2, bloque: 'A', descripcion: '', fotoUrl: '', indicaciones: '' },
-      // Bloque B
+
       { id: 65, nombre: 'Laboratorio de cómputo 14B-201', tipo: 'Laboratorio', piso: 2, bloque: 'B', descripcion: '', fotoUrl: '', indicaciones: '' },
       { id: 66, nombre: 'Aula 14B-202', tipo: 'Aula', piso: 2, bloque: 'B', descripcion: '', fotoUrl: '', indicaciones: '' },
       { id: 67, nombre: 'Laboratorio de vinci de proyecto', tipo: 'Laboratorio', piso: 2, bloque: 'B', descripcion: '', fotoUrl: '', indicaciones: '' },
       { id: 68, nombre: 'Aula 14B-201', tipo: 'Aula', piso: 2, bloque: 'B', descripcion: '', fotoUrl: '', indicaciones: '' },
       { id: 69, nombre: 'Laboratorio de cómputo 14B-202', tipo: 'Laboratorio', piso: 2, bloque: 'B', descripcion: '', fotoUrl: '', indicaciones: '' },
-      // Bloque C
+
       { id: 70, nombre: 'Aula 14C-201', tipo: 'Aula', piso: 2, bloque: 'C', descripcion: '', fotoUrl: '', indicaciones: '' },
       { id: 71, nombre: 'Aula 14C-202', tipo: 'Aula', piso: 2, bloque: 'C', descripcion: '', fotoUrl: '', indicaciones: '' },
       { id: 72, nombre: 'Laboratorio de cómputo 14C-201', tipo: 'Laboratorio', piso: 2, bloque: 'C', descripcion: '', fotoUrl: '', indicaciones: '' },
@@ -261,80 +257,42 @@ exports.seed = async (req, res) => {
       detalle: error.message
     });
   }
-  // POST /api/espacios/restaurar-fotos
-  exports.restaurarFotos = async (req, res) => {
-    try {
-      const db = await getDb();
+};
 
-      const fotos = [
-        {
-          id: 15,
-          fotoUrl: "https://ubicafii-backend.onrender.com/uploads/1781576332531-foto.jpg"
-        },
-        {
-          id: 17,
-          fotoUrl: "https://ubicafii-backend.onrender.com/uploads/1781643628736-foto.jpg"
-        },
-        {
-          id: 18,
-          fotoUrl: "https://ubicafii-backend.onrender.com/uploads/1781643780641-foto.jpg"
-        },
-        {
-          id: 35,
-          fotoUrl: "https://ubicafii-backend.onrender.com/uploads/1781644096002-foto.jpg"
-        },
-        {
-          id: 35,
-          fotoUrl: "https://ubicafii-backend.onrender.com/uploads/1781644330887-foto.jpg"
-        },
-        {
-          id: 36,
-          fotoUrl: "https://ubicafii-backend.onrender.com/uploads/1781644353222-foto.jpg"
-        },
-        {
-          id: 37,
-          fotoUrl: "https://ubicafii-backend.onrender.com/uploads/1781644548964-foto.jpg"
-        },
-        {
-          id: 38,
-          fotoUrl: "https://ubicafii-backend.onrender.com/uploads/1781644762508-foto.jpg"
-        },
-        {
-          id: 39,
-          fotoUrl: "https://ubicafii-backend.onrender.com/uploads/1781645113289-foto.jpg"
-        },
-        {
-          id: 40,
-          fotoUrl: "https://ubicafii-backend.onrender.com/uploads/1781645206419-foto.jpg"
-        }
-      ];
+// POST /api/espacios/restaurar-fotos
+exports.restaurarFotos = async (req, res) => {
+  try {
+    const db = await getDb();
 
-      fotos.forEach(f => {
+    // IDs corregidos de forma secuencial evitando duplicados erróneos
+    const fotos = [
+      { id: 15, fotoUrl: "https://ubicafii-backend.onrender.com/uploads/1781576332531-foto.jpg" },
+      { id: 17, fotoUrl: "https://ubicafii-backend.onrender.com/uploads/1781643628736-foto.jpg" },
+      { id: 18, fotoUrl: "https://ubicafii-backend.onrender.com/uploads/1781643780641-foto.jpg" },
+      { id: 35, fotoUrl: "https://ubicafii-backend.onrender.com/uploads/1781644096002-foto.jpg" },
+      { id: 36, fotoUrl: "https://ubicafii-backend.onrender.com/uploads/1781644330887-foto.jpg" },
+      { id: 37, fotoUrl: "https://ubicafii-backend.onrender.com/uploads/1781644353222-foto.jpg" },
+      { id: 38, fotoUrl: "https://ubicafii-backend.onrender.com/uploads/1781644548964-foto.jpg" },
+      { id: 39, fotoUrl: "https://ubicafii-backend.onrender.com/uploads/1781644762508-foto.jpg" },
+      { id: 40, fotoUrl: "https://ubicafii-backend.onrender.com/uploads/1781645113289-foto.jpg" }
+    ];
 
-        db.run(
-          `
-          UPDATE espacios
-          SET fotoUrl = ?
-          WHERE id = ?
-          `,
-          [
-            f.fotoUrl,
-            f.id
-          ]
-        );
-      });
-      await saveDb();
-      res.json({
-        mensaje:"Fotos restauradas correctamente",
-        cantidad:fotos.length
-      });
+    fotos.forEach(f => {
+      db.run(
+        `UPDATE espacios SET fotoUrl = ? WHERE id = ?`,
+        [f.fotoUrl, f.id]
+      );
+    });
 
-    } catch(error){
-      console.error(error);
-      res.status(500).json({
-        error:"Error restaurando fotos"
-      });
-
-    }
-  };
+    await saveDb();
+    res.json({
+      mensaje: "Fotos restauradas correctamente",
+      cantidad: fotos.length
+    });
+  } catch (error) {
+    console.error("ERROR RESTAURANDO FOTOS:", error);
+    res.status(500).json({
+      error: "Error restaurando fotos"
+    });
+  }
 };
