@@ -34,14 +34,13 @@ exports.seed = async (req, res) => {
     const db = await getDb();
     await db.execute('DELETE FROM bloques');
 
-    const bloques = [
-      { bloque: 'A', mapaX: 0.12, mapaY: 0.18, mapaWidth: 0.11, mapaHeight: 0.30 },
-      { bloque: 'B', mapaX: 0.24, mapaY: 0.18, mapaWidth: 0.11, mapaHeight: 0.30 },
-      { bloque: 'C', mapaX: 0.459, mapaY: 0.241, mapaWidth: 0.0658, mapaHeight: 0.259 },
-      { bloque: 'D', mapaX: 0.62, mapaY: 0.20, mapaWidth: 0.18, mapaHeight: 0.34 },
-      { bloque: 'E', mapaX: 0.45, mapaY: 0.55, mapaWidth: 0.12, mapaHeight: 0.25 },
-      { bloque: 'F', mapaX: 0.60, mapaY: 0.55, mapaWidth: 0.12, mapaHeight: 0.25 }
-    ];
+const bloques = [
+  { bloque: 'A',     mapaX: 0.2790, mapaY: 0.2430, mapaWidth: 0.0590, mapaHeight: 0.2577 },
+  { bloque: 'B',     mapaX: 0.3690, mapaY: 0.2415, mapaWidth: 0.0584, mapaHeight: 0.1156 },
+  { bloque: 'C',     mapaX: 0.459,  mapaY: 0.241,  mapaWidth: 0.0658, mapaHeight: 0.259  },
+  { bloque: 'D/E/F', mapaX: 0.0733, mapaY: 0.3507, mapaWidth: 0.1623, mapaHeight: 0.2204 },
+  { bloque: 'G',     mapaX: 0.2011, mapaY: 0.0708, mapaWidth: 0.0351, mapaHeight: 0.2814 }
+];
 
     for (const b of bloques) {
       await db.execute({
