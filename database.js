@@ -32,6 +32,15 @@ async function getDb() {
     )
   `);
   return client;
+  await client.execute(`
+    CREATE TABLE IF NOT EXISTS puntos_interes (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      nombre TEXT NOT NULL,
+      tipo TEXT NOT NULL,
+      mapaX REAL NOT NULL,
+      mapaY REAL NOT NULL
+    )
+  `);
 }
 
 // En Turso no necesitas saveDb porque guarda automáticamente
