@@ -17,7 +17,7 @@ exports.seed = async (req, res) => {
 
     const puntos = [
       { nombre: 'Entrada Principal', tipo: 'entrada', mapaX: 0.3891, mapaY: 0.6138 },  // ajusta según tu imagen
-      { nombre: 'Cafetería Central', tipo: 'cafeteria', mapaX: 0.2597, mapaY: 0.380/ },
+      { nombre: 'Cafetería Central', tipo: 'cafeteria', mapaX: 0.2597, mapaY: 0.380 },
     ];
 
     for (const p of puntos) {
