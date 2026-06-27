@@ -1,85 +1,142 @@
 const { getDb, saveDb } = require('../database');
+const formatFotoUrl = require('../utils/formatFotoUrl');
 
-// Función interna para mapear filas y columnas de sql.js de forma compacta
-const parseRows = (result) => {
-  if (!result || result.length === 0) return [];
-  const { columns, values } = result[0];
-  return values.map(row => Object.fromEntries(columns.map((col, i) => [col, row[i]])));
-};
-
-// GET /api/espacios
+// GET todos
 exports.getAll = async (req, res) => {
   try {
+    const { piso, tipo, q } = req.query;
     const db = await getDb();
-    const result = db.exec('SELECT * FROM espacios ORDER BY id ASC');
-    res.json(parseRows(result));
+    let query = 'SELECT * FROM espacios WHERE 1=1';
+    const params = {};
+
+    if (piso) { query += ' AND piso = :piso'; params[':piso'] = parseInt(piso); }
+    if (tipo) { query += ' AND tipo = :tipo'; params[':tipo'] = tipo; }
+    if (q)    { query += ' AND nombre LIKE :q'; params[':q'] = `%${q}%`; }
+
+    const stmt = db.prepare(query);
+    stmt.bind(params);
+    const espacios = [];
+    while (stmt.step()) espacios.push(stmt.getAsObject());
+    stmt.free();
+
+    const result = espacios.map(e => ({ ...e, fotoUrl: formatFotoUrl(e.fotoUrl, req) }));
+    res.json(result);
   } catch (error) {
-    res.status(500).json({ error: "Error obteniendo espacios" });
+    res.status(500).json({ error: error.message });
   }
 };
 
-// GET /api/espacios/:id
+// GET por ID
 exports.getById = async (req, res) => {
   try {
     const db = await getDb();
-    const result = db.exec('SELECT * FROM espacios WHERE id = ?', [req.params.id]);
-    const espacios = parseRows(result);
-    if (espacios.length === 0) return res.status(404).json({ error: "Espacio no encontrado" });
-    res.json(espacios[0]);
+    const stmt = db.prepare('SELECT * FROM espacios WHERE id = :id');
+    stmt.bind({ ':id': req.params.id });
+    let espacio = null;
+    if (stmt.step()) espacio = stmt.getAsObject();
+    stmt.free();
+    if (espacio) {
+      espacio.fotoUrl = formatFotoUrl(espacio.fotoUrl, req);
+      res.json(espacio);
+    } else {
+      res.status(404).json({ mensaje: 'No encontrado' });
+    }
   } catch (error) {
-    res.status(500).json({ error: "Error buscando espacio" });
+    res.status(500).json({ error: error.message });
   }
 };
 
-// POST /api/espacios
+// POST crear
 exports.create = async (req, res) => {
   try {
-    const db = await getDb();
     const { nombre, tipo, piso, descripcion, fotoUrl, indicaciones, bloque, coordenadaX, coordenadaY } = req.body;
-
-    db.run(
-      `INSERT INTO espacios (nombre, tipo, piso, descripcion, fotoUrl, indicaciones, bloque, coordenadaX, coordenadaY)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [nombre, tipo, piso, descripcion || "", fotoUrl || "", indicaciones || "", bloque, coordenadaX || 0, coordenadaY || 0]
-    );
+    const db = await getDb();
+    const stmt = db.prepare(`
+      INSERT INTO espacios (nombre, tipo, piso, descripcion, fotoUrl, indicaciones, bloque, coordenadaX, coordenadaY)
+      VALUES (:nombre, :tipo, :piso, :descripcion, :fotoUrl, :indicaciones, :bloque, :coordenadaX, :coordenadaY)
+    `);
+    stmt.run({
+      ':nombre': nombre,
+      ':tipo': tipo,
+      ':piso': parseInt(piso),
+      ':descripcion': descripcion || '',
+      ':fotoUrl': fotoUrl || '',
+      ':indicaciones': indicaciones || '',
+      ':bloque': bloque,
+      ':coordenadaX': coordenadaX || 0.5,
+      ':coordenadaY': coordenadaY || 0.3
+    });
+    stmt.free();
     await saveDb();
-    res.json({ mensaje: "Espacio creado correctamente" });
+
+    const idStmt = db.prepare('SELECT * FROM espacios WHERE id = last_insert_rowid()');
+    let nuevo = null;
+    if (idStmt.step()) nuevo = idStmt.getAsObject();
+    idStmt.free();
+    if (nuevo) nuevo.fotoUrl = formatFotoUrl(nuevo.fotoUrl, req);
+    res.status(201).json(nuevo);
   } catch (error) {
-    res.status(500).json({ error: "Error creando espacio" });
+    res.status(500).json({ error: error.message });
   }
 };
 
-// PUT /api/espacios/:id
+// PUT actualizar
 exports.update = async (req, res) => {
   try {
-    const db = await getDb();
     const { nombre, tipo, piso, descripcion, fotoUrl, indicaciones, bloque, coordenadaX, coordenadaY } = req.body;
-
-    db.run(
-      `UPDATE espacios SET nombre=?, tipo=?, piso=?, descripcion=?, fotoUrl=?, indicaciones=?, bloque=?, coordenadaX=?, coordenadaY=? WHERE id=?`,
-      [nombre, tipo, piso, descripcion, fotoUrl, indicaciones, bloque, coordenadaX, coordenadaY, req.params.id]
-    );
+    const db = await getDb();
+    const stmt = db.prepare(`
+      UPDATE espacios SET nombre=:nombre, tipo=:tipo, piso=:piso, descripcion=:descripcion,
+        fotoUrl=:fotoUrl, indicaciones=:indicaciones, bloque=:bloque,
+        coordenadaX=:coordenadaX, coordenadaY=:coordenadaY WHERE id=:id
+    `);
+    stmt.run({
+      ':nombre': nombre,
+      ':tipo': tipo,
+      ':piso': parseInt(piso),
+      ':descripcion': descripcion,
+      ':fotoUrl': fotoUrl,
+      ':indicaciones': indicaciones,
+      ':bloque': bloque,
+      ':coordenadaX': coordenadaX,
+      ':coordenadaY': coordenadaY,
+      ':id': req.params.id
+    });
+    stmt.free();
     await saveDb();
-    res.json({ mensaje: "Espacio actualizado" });
+
+    const checkStmt = db.prepare('SELECT * FROM espacios WHERE id = :id');
+    checkStmt.bind({ ':id': req.params.id });
+    let actualizado = null;
+    if (checkStmt.step()) actualizado = checkStmt.getAsObject();
+    checkStmt.free();
+    if (actualizado) {
+      actualizado.fotoUrl = formatFotoUrl(actualizado.fotoUrl, req);
+      res.json(actualizado);
+    } else {
+      res.status(404).json({ mensaje: 'No encontrado' });
+    }
   } catch (error) {
-    res.status(500).json({ error: "Error actualizando espacio" });
+    res.status(500).json({ error: error.message });
   }
 };
 
-// DELETE /api/espacios/:id
-exports.delete = async (req, res) => {
+// DELETE eliminar
+exports.remove = async (req, res) => {
   try {
     const db = await getDb();
-    db.run('DELETE FROM espacios WHERE id = ?', [req.params.id]);
+    const stmt = db.prepare('DELETE FROM espacios WHERE id = :id');
+    stmt.run({ ':id': req.params.id });
+    stmt.free();
     await saveDb();
-    res.json({ mensaje: "Espacio eliminado" });
+    res.status(204).send();
   } catch (error) {
-    res.status(500).json({ error: "Error espacio" });
+    res.status(500).json({ error: error.message });
   }
 };
 
 // GET /api/espacios/seed
-exports.seed = async (req, res) => {
+/*exports.seed = async (req, res) => {
   console.log("ENTRO AL SEED NUEVO");
   try {
     const db = await getDb();
@@ -257,215 +314,68 @@ exports.seed = async (req, res) => {
       detalle: error.message
     });
   }
-};
+};*/
 
-// POST /api/espacios/restaurar-datos
-exports.restaurarDatos = async (req,res)=>{
- try {
+// POST restaurar-datos
+exports.restaurarDatos = async (req, res) => {
+  try {
+    const db = await getDb();
 
- const db = await getDb();
+    const datos = [
+      {
+        id: 13,
+        fotoUrl: "https://ubicafii-backend.onrender.com/uploads/1781559314993-foto.jpg",
+        descripcion: "Aula de clases ubicada en el Bloque C, Planta Baja, hacia el lado izquierdo. Tiene una capacidad estimada para 40 estudiantes y está equipada con proyector, pizarrón y aire acondicionado.",
+        indicaciones: "Al ingresar al Bloque C, en la planta baja, dirígete hacia la izquierda."
+      },
+      { id: 14, fotoUrl: "https://ubicafii-backend.onrender.com/uploads/1781567902958-foto.jpg", descripcion: "Aula de clases ubicada en el Bloque C, Planta Baja. Cuenta con proyector, pizarrón y aire acondicionado.", indicaciones: "Al ingresar al Bloque C, dirígete hacia la izquierda." },
+      { id: 15, fotoUrl: "https://ubicafii-backend.onrender.com/uploads/1781643365903-foto.jpg" },
+      { id: 16, fotoUrl: "https://ubicafii-backend.onrender.com/uploads/1781643504558-foto.jpg", descripcion: "Baños ubicados al fondo del pasillo principal del Bloque C.", indicaciones: "Fondo del pasillo central." },
+      { id: 17, fotoUrl: "https://ubicafii-backend.onrender.com/uploads/1781643628736-foto.jpg" },
+      { id: 18, fotoUrl: "https://ubicafii-backend.onrender.com/uploads/1781643780641-foto.jpg" },
+      { id: 35, fotoUrl: "https://ubicafii-backend.onrender.com/uploads/1781644330887-foto.jpg" },
+      { id: 36, fotoUrl: "https://ubicafii-backend.onrender.com/uploads/1781644330887-foto.jpg", descripcion: "Aula ubicada en el primer piso del Bloque C.", indicaciones: "Subir al primer piso y dirigirse al Bloque C." },
+      { id: 37, fotoUrl: "https://ubicafii-backend.onrender.com/uploads/1781644353222-foto.jpg", descripcion: "Laboratorio de cómputo 14C-101.", indicaciones: "Primer piso Bloque C." },
+      { id: 38, fotoUrl: "https://ubicafii-backend.onrender.com/uploads/1781644548964-foto.jpg", descripcion: "Laboratorio de cómputo 14C-102.", indicaciones: "Primer piso Bloque C." },
+      { id: 39, fotoUrl: "https://ubicafii-backend.onrender.com/uploads/1781644762508-foto.jpg", descripcion: "Baños Bloque C primer piso.", indicaciones: "Ubicados cerca de las aulas del bloque." },
+      { id: 40, fotoUrl: "https://ubicafii-backend.onrender.com/uploads/1781645113289-foto.jpg", descripcion: "Secretaría del Bloque C.", indicaciones: "Primer piso Bloque C." },
+      { id: 41, fotoUrl: "https://ubicafii-backend.onrender.com/uploads/1781645206419-foto.jpg", descripcion: "Aula 14C-103.", indicaciones: "Primer piso Bloque C." },
+      { id: 42, fotoUrl: "https://ubicafii-backend.onrender.com/uploads/1781474939578-foto.jpg", descripcion: "Área de vinculación con la sociedad.", indicaciones: "Primer piso Bloque C." },
+      { id: 43, fotoUrl: "https://ubicafii-backend.onrender.com/uploads/1781645339024-foto.jpg", descripcion: "Sala de profesores.", indicaciones: "Primer piso Bloque C." },
+      { id: 44, fotoUrl: "https://ubicafii-backend.onrender.com/uploads/1781645304329-foto.jpg", descripcion: "Departamento técnico.", indicaciones: "Primer piso Bloque C." },
+      { id: 70, fotoUrl: "https://ubicafii-backend.onrender.com/uploads/1781645693112-foto.jpg" },
+      { id: 71, fotoUrl: "https://ubicafii-backend.onrender.com/uploads/1781645790450-foto.jpg" },
+      { id: 72, fotoUrl: "https://ubicafii-backend.onrender.com/uploads/1781645573448-foto.jpg" },
+      { id: 73, fotoUrl: "https://ubicafii-backend.onrender.com/uploads/1781645855469-foto.jpg" },
+      { id: 74, fotoUrl: "https://ubicafii-backend.onrender.com/uploads/1781645942165-foto.jpg" },
+      { id: 75, fotoUrl: "https://ubicafii-backend.onrender.com/uploads/1781646036739-foto.jpg" },
+      { id: 76, fotoUrl: "https://ubicafii-backend.onrender.com/uploads/1781646151216-foto.jpg" },
+      { id: 77, fotoUrl: "https://ubicafii-backend.onrender.com/uploads/1781646213395-foto.jpg" },
+      { id: 78, fotoUrl: "https://ubicafii-backend.onrender.com/uploads/1781646256398-foto.jpg" }
+    ];
 
- const datos = [
+    const stmt = db.prepare(`
+      UPDATE espacios SET
+        fotoUrl = :fotoUrl,
+        descripcion = CASE WHEN :descripcion != '' THEN :descripcion ELSE descripcion END,
+        indicaciones = CASE WHEN :indicaciones != '' THEN :indicaciones ELSE indicaciones END
+      WHERE id = :id
+    `);
 
-  {
-   id:13,
-   fotoUrl:"https://ubicafii-backend.onrender.com/uploads/1781559314993-foto.jpg",
-   descripcion:"Aula de clases ubicada en el Bloque C, Planta Baja, hacia el lado izquierdo. Tiene una capacidad estimada para 40 estudiantes y está equipada con proyector, pizarrón y aire acondicionado.",
-   indicaciones:"Al ingresar al Bloque C, en la planta baja, dirígete hacia la izquierda."
-  },
+    for (const d of datos) {
+      stmt.run({
+        ':fotoUrl': d.fotoUrl || '',
+        ':descripcion': d.descripcion || '',
+        ':indicaciones': d.indicaciones || '',
+        ':id': d.id
+      });
+    }
+    stmt.free();
 
-  {
-   id:14,
-   fotoUrl:"https://ubicafii-backend.onrender.com/uploads/1781567902958-foto.jpg",
-   descripcion:"Aula de clases ubicada en el Bloque C, Planta Baja. Cuenta con proyector, pizarrón y aire acondicionado.",
-   indicaciones:"Al ingresar al Bloque C, dirígete hacia la izquierda."
-  },
-
-  {
-   id:15,
-   fotoUrl:"https://ubicafii-backend.onrender.com/uploads/1781643365903-foto.jpg"
-  },
-
-  {
-   id:16,
-   fotoUrl:"https://ubicafii-backend.onrender.com/uploads/1781643504558-foto.jpg",
-   descripcion:"Baños ubicados al fondo del pasillo principal del Bloque C.",
-   indicaciones:"Fondo del pasillo central."
-  },
-
-    {
-     id:17,
-     fotoUrl:"https://ubicafii-backend.onrender.com/uploads/1781643628736-foto.jpg"
-    },
-
-  {
-   id:18,
-   fotoUrl:"https://ubicafii-backend.onrender.com/uploads/1781643780641-foto.jpg"
-  },
-
-    {
-    id:35,
-    fotoUrl:"https://ubicafii-backend.onrender.com/uploads/1781644330887-foto.jpg"
-    },
-
-  {
-   id:36,
-   fotoUrl:"https://ubicafii-backend.onrender.com/uploads/1781644330887-foto.jpg",
-   descripcion:"Aula ubicada en el primer piso del Bloque C.",
-   indicaciones:"Subir al primer piso y dirigirse al Bloque C."
-  },
-
-
-  {
-   id:37,
-   fotoUrl:"https://ubicafii-backend.onrender.com/uploads/1781644353222-foto.jpg",
-   descripcion:"Laboratorio de cómputo 14C-101.",
-   indicaciones:"Primer piso Bloque C."
-  },
-
-
-  {
-   id:38,
-   fotoUrl:"https://ubicafii-backend.onrender.com/uploads/1781644548964-foto.jpg",
-   descripcion:"Laboratorio de cómputo 14C-102.",
-   indicaciones:"Primer piso Bloque C."
-  },
-
-
-  {
-   id:39,
-   fotoUrl:"https://ubicafii-backend.onrender.com/uploads/1781644762508-foto.jpg",
-   descripcion:"Baños Bloque C primer piso.",
-   indicaciones:"Ubicados cerca de las aulas del bloque."
-  },
-
-
-  {
-   id:40,
-   fotoUrl:"https://ubicafii-backend.onrender.com/uploads/1781645113289-foto.jpg",
-   descripcion:"Secretaría del Bloque C.",
-   indicaciones:"Primer piso Bloque C."
-  },
-
-
-  {
-   id:41,
-   fotoUrl:"https://ubicafii-backend.onrender.com/uploads/1781645206419-foto.jpg",
-   descripcion:"Aula 14C-103.",
-   indicaciones:"Primer piso Bloque C."
-  },
-
-
-  {
-   id:42,
-   fotoUrl:"https://ubicafii-backend.onrender.com/uploads/1781474939578-foto.jpg",
-   descripcion:"Área de vinculación con la sociedad.",
-   indicaciones:"Primer piso Bloque C."
-  },
-
-
-  {
-   id:43,
-   fotoUrl:"https://ubicafii-backend.onrender.com/uploads/1781645339024-foto.jpg",
-   descripcion:"Sala de profesores.",
-   indicaciones:"Primer piso Bloque C."
-  },
-
-
-  {
-   id:44,
-   fotoUrl:"https://ubicafii-backend.onrender.com/uploads/1781645304329-foto.jpg",
-   descripcion:"Departamento técnico.",
-   indicaciones:"Primer piso Bloque C."
-  },
-
-
-  {
-   id:70,
-   fotoUrl:"https://ubicafii-backend.onrender.com/uploads/1781645693112-foto.jpg"
-  },
-
-  {
-   id:71,
-   fotoUrl:"https://ubicafii-backend.onrender.com/uploads/1781645790450-foto.jpg"
-  },
-
-  {
-   id:72,
-   fotoUrl:"https://ubicafii-backend.onrender.com/uploads/1781645573448-foto.jpg"
-  },
-
-  {
-   id:73,
-   fotoUrl:"https://ubicafii-backend.onrender.com/uploads/1781645855469-foto.jpg"
-  },
-
-  {
-   id:74,
-   fotoUrl:"https://ubicafii-backend.onrender.com/uploads/1781645942165-foto.jpg"
-  },
-
-  {
-   id:75,
-   fotoUrl:"https://ubicafii-backend.onrender.com/uploads/1781646036739-foto.jpg"
-  },
-
-  {
-   id:76,
-   fotoUrl:"https://ubicafii-backend.onrender.com/uploads/1781646151216-foto.jpg"
-  },
-
-  {
-   id:77,
-   fotoUrl:"https://ubicafii-backend.onrender.com/uploads/1781646213395-foto.jpg"
-  },
-
-  {
-   id:78,
-   fotoUrl:"https://ubicafii-backend.onrender.com/uploads/1781646256398-foto.jpg"
+    await saveDb();
+    res.json({ mensaje: "Datos restaurados correctamente", cantidad: datos.length });
+  } catch (e) {
+    console.log(e);
+    res.status(500).json({ error: e.message });
   }
-
- ];
-
-
- datos.forEach(d=>{
-
- db.run(
- `
- UPDATE espacios
- SET
- fotoUrl=?,
- descripcion=COALESCE(NULLIF(?,''),descripcion),
- indicaciones=COALESCE(NULLIF(?,''),indicaciones)
- WHERE id=?
- `,
- [
- d.fotoUrl || "",
- d.descripcion || "",
- d.indicaciones || "",
- d.id
- ]);
-
- });
-
-
- await saveDb();
-
-
- res.json({
-   mensaje:"Datos restaurados correctamente",
-   cantidad:datos.length
- });
-
-
- }catch(e){
-
- console.log(e);
-
- res.status(500).json({
-   error:e.message
- });
-
- }
-
 };

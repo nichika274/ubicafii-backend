@@ -7,8 +7,6 @@ const ctrl = require('../controllers/espaciosController');
 // IMPORTANTE: rutas específicas primero
 router.post('/restaurar-datos', ctrl.restaurarDatos);
 
-router.get('/seed', ctrl.seed);
-
 router.get('/', ctrl.getAll);
 
 router.get('/:id', ctrl.getById);
