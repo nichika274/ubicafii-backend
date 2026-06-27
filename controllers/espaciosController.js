@@ -260,39 +260,69 @@ exports.seed = async (req, res) => {
 };
 
 // POST /api/espacios/restaurar-fotos
-exports.restaurarFotos = async (req, res) => {
-  try {
-    const db = await getDb();
+exports.restaurarFotos = async (req,res)=>{
+ try {
 
-    // IDs corregidos de forma secuencial evitando duplicados erróneos
-    const fotos = [
-      { id: 15, fotoUrl: "https://ubicafii-backend.onrender.com/uploads/1781576332531-foto.jpg" },
-      { id: 17, fotoUrl: "https://ubicafii-backend.onrender.com/uploads/1781643628736-foto.jpg" },
-      { id: 18, fotoUrl: "https://ubicafii-backend.onrender.com/uploads/1781643780641-foto.jpg" },
-      { id: 35, fotoUrl: "https://ubicafii-backend.onrender.com/uploads/1781644096002-foto.jpg" },
-      { id: 36, fotoUrl: "https://ubicafii-backend.onrender.com/uploads/1781644330887-foto.jpg" },
-      { id: 37, fotoUrl: "https://ubicafii-backend.onrender.com/uploads/1781644353222-foto.jpg" },
-      { id: 38, fotoUrl: "https://ubicafii-backend.onrender.com/uploads/1781644548964-foto.jpg" },
-      { id: 39, fotoUrl: "https://ubicafii-backend.onrender.com/uploads/1781644762508-foto.jpg" },
-      { id: 40, fotoUrl: "https://ubicafii-backend.onrender.com/uploads/1781645113289-foto.jpg" }
-    ];
+ const db = await getDb();
 
-    fotos.forEach(f => {
-      db.run(
-        `UPDATE espacios SET fotoUrl = ? WHERE id = ?`,
-        [f.fotoUrl, f.id]
-      );
-    });
+ const fotos = [
+   {
+    id:13,
+    fotoUrl:"https://ubicafii-backend.onrender.com/uploads/1781311234-foto.jpg"
+   },
+   {
+    id:14,
+    fotoUrl:"https://ubicafii-backend.onrender.com/uploads/1781567902958-foto.jpg"
+   },
+   {
+    id:15,
+    fotoUrl:"https://ubicafii-backend.onrender.com/uploads/1781576332531-foto.jpg"
+   },
+   {
+    id:16,
+    fotoUrl:"https://ubicafii-backend.onrender.com/uploads/1781643504558-foto.jpg"
+   },
+   {
+    id:17,
+    fotoUrl:"https://ubicafii-backend.onrender.com/uploads/1781643628736-foto.jpg"
+   },
+   {
+    id:18,
+    fotoUrl:"https://ubicafii-backend.onrender.com/uploads/1781643780641-foto.jpg"
+   },
+   {
+    id:35,
+    fotoUrl:"https://ubicafii-backend.onrender.com/uploads/1781644096002-foto.jpg"
+   },
+   {
+    id:36,
+    fotoUrl:"https://ubicafii-backend.onrender.com/uploads/1781644330887-foto.jpg"
+   }
+ ];
 
-    await saveDb();
-    res.json({
-      mensaje: "Fotos restauradas correctamente",
-      cantidad: fotos.length
-    });
-  } catch (error) {
-    console.error("ERROR RESTAURANDO FOTOS:", error);
-    res.status(500).json({
-      error: "Error restaurando fotos"
-    });
-  }
-};
+ fotos.forEach(f=>{
+   db.run(
+    `UPDATE espacios SET fotoUrl=? WHERE id=?`,
+    [
+      f.fotoUrl,
+      f.id
+    ]
+   );
+ });
+
+
+ await saveDb();
+
+ res.json({
+   mensaje:"Fotos restauradas",
+   cantidad:fotos.length
+ });
+
+
+ }catch(e){
+   console.log(e);
+   res.status(500).json({
+     error:e.message
+   });
+ }
+}
