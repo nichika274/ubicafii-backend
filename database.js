@@ -2,7 +2,7 @@ const { createClient } = require('@libsql/client');
 
 const client = createClient({
   url: 'libsql://ubicafii-nichika274.aws-us-east-1.turso.io',
-  authToken: 'TU_TOKEN'
+  authToken: 'eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3ODI1NjgzNTIsImlkIjoiMDE5ZjA5NTktMDAwMS03ZDk5LWEwMTQtZGU2ODBkYjVmNjJmIiwicmlkIjoiZjExY2M5MTEtYTlmZS00NmI1LWFjNjAtZGNkZDU0ZWRmYTQzIn0.vSoJ_nuJYOocSbrWKWAclDrbzoQ25Z6iZQskxwe0uuh-8Xf2OIC_aanve3uamO5_anuedeNjNkHkI7qEvRzYAA'
 });
 
 async function getDb() {
