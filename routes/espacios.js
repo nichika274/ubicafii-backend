@@ -5,7 +5,7 @@ const ctrl = require('../controllers/espaciosController');
 
 
 // IMPORTANTE: rutas específicas primero
-router.post('/restaurar-fotos', ctrl.restaurarFotos);
+router.post('/restaurar-datos', ctrl.restaurarDatos);
 
 router.get('/seed', ctrl.seed);
 
