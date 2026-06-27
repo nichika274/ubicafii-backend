@@ -2,11 +2,11 @@ const { createClient } = require('@libsql/client');
 
 const client = createClient({
   url: 'libsql://ubicafii-nichika274.aws-us-east-1.turso.io',
-  authToken: 'eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3ODI1NjgzNTIsImlkIjoiMDE5ZjA5NTktMDAwMS03ZDk5LWEwMTQtZGU2ODBkYjVmNjJmIiwicmlkIjoiZjExY2M5MTEtYTlmZS00NmI1LWFjNjAtZGNkZDU0ZWRmYTQzIn0.vSoJ_nuJYOocSbrWKWAclDrbzoQ25Z6iZQskxwe0uuh-8Xf2OIC_aanve3uamO5_anuedeNjNkHkI7qEvRzYAA'
+  authToken: 'TU_TOKEN'
 });
 
 async function getDb() {
-  // Crear tablas si no existen (idempotente)
+  // Crear tabla espacios
   await client.execute(`
     CREATE TABLE IF NOT EXISTS espacios (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -21,6 +21,8 @@ async function getDb() {
       coordenadaY REAL DEFAULT 0.3
     )
   `);
+
+  // Crear tabla bloques
   await client.execute(`
     CREATE TABLE IF NOT EXISTS bloques (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -31,7 +33,8 @@ async function getDb() {
       mapaHeight REAL NOT NULL
     )
   `);
-  return client;
+
+  // Crear tabla puntos_interes
   await client.execute(`
     CREATE TABLE IF NOT EXISTS puntos_interes (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -41,11 +44,11 @@ async function getDb() {
       mapaY REAL NOT NULL
     )
   `);
+
+  return client;
 }
 
-// En Turso no necesitas saveDb porque guarda automáticamente
-async function saveDb() {
-  // No es necesario hacer nada
-}
+// En Turso no necesitas saveDb
+async function saveDb() {}
 
 module.exports = { getDb, saveDb };
