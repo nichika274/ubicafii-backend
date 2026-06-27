@@ -4,7 +4,7 @@ const ctrl = require('../controllers/espaciosController');
 
 // Rutas específicas antes de las parametrizadas
 router.post('/restaurar-datos', ctrl.restaurarDatos);
-router.post('/seed', ctrl.seed);              // ← ¡esta línea debe existir!
+//router.post('/seed', ctrl.seed);              // ← ¡esta línea debe existir!
 
 // CRUD
 router.get('/', ctrl.getAll);
