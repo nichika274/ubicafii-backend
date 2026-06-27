@@ -107,9 +107,10 @@ exports.seed = async (req, res) => {
   try {
     const db = await getDb();
 
-    // Limpiar la tabla (solo borramos los datos, no la estructura)
+    // 1. Limpiar la tabla
     await db.execute('DELETE FROM espacios');
 
+    // 2. Datos a insertar (78 objetos en total)
     const espacios = [
       // ─── Planta baja (piso 0) ─────────────────────────────
       { id: 1, nombre: 'Administración de edificio facu', tipo: 'Oficina', piso: 0, bloque: 'A', descripcion: '', fotoUrl: '', indicaciones: '' },
@@ -133,7 +134,7 @@ exports.seed = async (req, res) => {
         piso: 0,
         bloque: 'C',
         descripcion: 'Aula de clases ubicada en el Bloque C, Planta Baja, hacia el lado izquierdo. Tiene una capacidad estimada para 40 estudiantes y está equipada con proyector, pizarrón y aire acondicionado.',
-        fotoUrl: 'https://ubicafii-backend.onrender.com/uploads/1781559314993-foto.jpg',   // ← URL correcta
+        fotoUrl: 'https://ubicafii-backend.onrender.com/uploads/1781559314993-foto.jpg',
         indicaciones: 'Al ingresar al Bloque C, en la planta baja, dirígete hacia la izquierda.',
         coordenadaX: 0.88,
         coordenadaY: 0.12
@@ -237,10 +238,14 @@ exports.seed = async (req, res) => {
       { id: 78, nombre: 'Laboratorio de cómputo 14C-204', tipo: 'Laboratorio', piso: 2, bloque: 'C', descripcion: '', fotoUrl: '', indicaciones: '' }
     ];
 
-    for (const e of espacios) {
-      await db.execute({
-        sql: `INSERT INTO espacios (id, nombre, tipo, piso, descripcion, fotoUrl, indicaciones, bloque, coordenadaX, coordenadaY)
-              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    // 3. Preparar la sentencia de inserción única
+    const sql = `INSERT INTO espacios (id, nombre, tipo, piso, descripcion, fotoUrl, indicaciones, bloque, coordenadaX, coordenadaY)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+
+    // 4. Insertar todas las filas optimizadamente dentro de una transacción por lote (batch)
+    await db.batch(
+      espacios.map(e => ({
+        sql,
         args: [
           e.id,
           e.nombre,
@@ -253,8 +258,8 @@ exports.seed = async (req, res) => {
           e.coordenadaX ?? 0.5,
           e.coordenadaY ?? 0.3
         ]
-      });
-    }
+      }))
+    );
 
     res.json({ mensaje: "Seed ejecutado correctamente", cantidad: espacios.length });
   } catch (error) {
