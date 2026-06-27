@@ -15,4 +15,6 @@ router.put('/:id', ctrl.update);
 
 router.delete('/:id', ctrl.delete);
 
+router.post('/restaurar-fotos', espaciosController.restaurarFotos);
+
 module.exports = router;

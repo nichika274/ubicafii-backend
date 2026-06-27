@@ -261,4 +261,80 @@ exports.seed = async (req, res) => {
       detalle: error.message
     });
   }
+  // POST /api/espacios/restaurar-fotos
+  exports.restaurarFotos = async (req, res) => {
+    try {
+      const db = await getDb();
+
+      const fotos = [
+        {
+          id: 15,
+          fotoUrl: "https://ubicafii-backend.onrender.com/uploads/1781576332531-foto.jpg"
+        },
+        {
+          id: 17,
+          fotoUrl: "https://ubicafii-backend.onrender.com/uploads/1781643628736-foto.jpg"
+        },
+        {
+          id: 18,
+          fotoUrl: "https://ubicafii-backend.onrender.com/uploads/1781643780641-foto.jpg"
+        },
+        {
+          id: 35,
+          fotoUrl: "https://ubicafii-backend.onrender.com/uploads/1781644096002-foto.jpg"
+        },
+        {
+          id: 35,
+          fotoUrl: "https://ubicafii-backend.onrender.com/uploads/1781644330887-foto.jpg"
+        },
+        {
+          id: 36,
+          fotoUrl: "https://ubicafii-backend.onrender.com/uploads/1781644353222-foto.jpg"
+        },
+        {
+          id: 37,
+          fotoUrl: "https://ubicafii-backend.onrender.com/uploads/1781644548964-foto.jpg"
+        },
+        {
+          id: 38,
+          fotoUrl: "https://ubicafii-backend.onrender.com/uploads/1781644762508-foto.jpg"
+        },
+        {
+          id: 39,
+          fotoUrl: "https://ubicafii-backend.onrender.com/uploads/1781645113289-foto.jpg"
+        },
+        {
+          id: 40,
+          fotoUrl: "https://ubicafii-backend.onrender.com/uploads/1781645206419-foto.jpg"
+        }
+      ];
+
+      fotos.forEach(f => {
+
+        db.run(
+          `
+          UPDATE espacios
+          SET fotoUrl = ?
+          WHERE id = ?
+          `,
+          [
+            f.fotoUrl,
+            f.id
+          ]
+        );
+      });
+      await saveDb();
+      res.json({
+        mensaje:"Fotos restauradas correctamente",
+        cantidad:fotos.length
+      });
+
+    } catch(error){
+      console.error(error);
+      res.status(500).json({
+        error:"Error restaurando fotos"
+      });
+
+    }
+  };
 };
