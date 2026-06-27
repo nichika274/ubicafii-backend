@@ -6,21 +6,16 @@ exports.getAll = async (req, res) => {
   try {
     const { piso, tipo, q } = req.query;
     const db = await getDb();
-    let query = 'SELECT * FROM espacios WHERE 1=1';
-    const params = {};
+    let sql = 'SELECT * FROM espacios WHERE 1=1';
+    const params = [];
 
-    if (piso) { query += ' AND piso = :piso'; params[':piso'] = parseInt(piso); }
-    if (tipo) { query += ' AND tipo = :tipo'; params[':tipo'] = tipo; }
-    if (q)    { query += ' AND nombre LIKE :q'; params[':q'] = `%${q}%`; }
+    if (piso) { sql += ' AND piso = ?'; params.push(parseInt(piso)); }
+    if (tipo) { sql += ' AND tipo = ?'; params.push(tipo); }
+    if (q)    { sql += ' AND nombre LIKE ?'; params.push(`%${q}%`); }
 
-    const stmt = db.prepare(query);
-    stmt.bind(params);
-    const espacios = [];
-    while (stmt.step()) espacios.push(stmt.getAsObject());
-    stmt.free();
-
-    const result = espacios.map(e => ({ ...e, fotoUrl: formatFotoUrl(e.fotoUrl, req) }));
-    res.json(result);
+    const result = await db.execute({ sql, args: params });
+    const espacios = result.rows.map(e => ({ ...e, fotoUrl: formatFotoUrl(e.fotoUrl, req) }));
+    res.json(espacios);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -30,17 +25,16 @@ exports.getAll = async (req, res) => {
 exports.getById = async (req, res) => {
   try {
     const db = await getDb();
-    const stmt = db.prepare('SELECT * FROM espacios WHERE id = :id');
-    stmt.bind({ ':id': req.params.id });
-    let espacio = null;
-    if (stmt.step()) espacio = stmt.getAsObject();
-    stmt.free();
-    if (espacio) {
-      espacio.fotoUrl = formatFotoUrl(espacio.fotoUrl, req);
-      res.json(espacio);
-    } else {
-      res.status(404).json({ mensaje: 'No encontrado' });
+    const result = await db.execute({
+      sql: 'SELECT * FROM espacios WHERE id = ?',
+      args: [req.params.id]
+    });
+    if (result.rows.length === 0) {
+      return res.status(404).json({ mensaje: 'No encontrado' });
     }
+    let espacio = result.rows[0];
+    espacio.fotoUrl = formatFotoUrl(espacio.fotoUrl, req);
+    res.json(espacio);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -51,30 +45,19 @@ exports.create = async (req, res) => {
   try {
     const { nombre, tipo, piso, descripcion, fotoUrl, indicaciones, bloque, coordenadaX, coordenadaY } = req.body;
     const db = await getDb();
-    const stmt = db.prepare(`
-      INSERT INTO espacios (nombre, tipo, piso, descripcion, fotoUrl, indicaciones, bloque, coordenadaX, coordenadaY)
-      VALUES (:nombre, :tipo, :piso, :descripcion, :fotoUrl, :indicaciones, :bloque, :coordenadaX, :coordenadaY)
-    `);
-    stmt.run({
-      ':nombre': nombre,
-      ':tipo': tipo,
-      ':piso': parseInt(piso),
-      ':descripcion': descripcion || '',
-      ':fotoUrl': fotoUrl || '',
-      ':indicaciones': indicaciones || '',
-      ':bloque': bloque,
-      ':coordenadaX': coordenadaX || 0.5,
-      ':coordenadaY': coordenadaY || 0.3
+    const result = await db.execute({
+      sql: `INSERT INTO espacios (nombre, tipo, piso, descripcion, fotoUrl, indicaciones, bloque, coordenadaX, coordenadaY)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      args: [nombre, tipo, parseInt(piso), descripcion || '', fotoUrl || '', indicaciones || '', bloque, coordenadaX || 0.5, coordenadaY || 0.3]
     });
-    stmt.free();
-    await saveDb();
-
-    const idStmt = db.prepare('SELECT * FROM espacios WHERE id = last_insert_rowid()');
-    let nuevo = null;
-    if (idStmt.step()) nuevo = idStmt.getAsObject();
-    idStmt.free();
-    if (nuevo) nuevo.fotoUrl = formatFotoUrl(nuevo.fotoUrl, req);
-    res.status(201).json(nuevo);
+    const nuevoId = result.lastInsertRowid;
+    const nuevo = await db.execute({
+      sql: 'SELECT * FROM espacios WHERE id = ?',
+      args: [nuevoId]
+    });
+    const espacio = nuevo.rows[0];
+    if (espacio) espacio.fotoUrl = formatFotoUrl(espacio.fotoUrl, req);
+    res.status(201).json(espacio);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -85,37 +68,20 @@ exports.update = async (req, res) => {
   try {
     const { nombre, tipo, piso, descripcion, fotoUrl, indicaciones, bloque, coordenadaX, coordenadaY } = req.body;
     const db = await getDb();
-    const stmt = db.prepare(`
-      UPDATE espacios SET nombre=:nombre, tipo=:tipo, piso=:piso, descripcion=:descripcion,
-        fotoUrl=:fotoUrl, indicaciones=:indicaciones, bloque=:bloque,
-        coordenadaX=:coordenadaX, coordenadaY=:coordenadaY WHERE id=:id
-    `);
-    stmt.run({
-      ':nombre': nombre,
-      ':tipo': tipo,
-      ':piso': parseInt(piso),
-      ':descripcion': descripcion,
-      ':fotoUrl': fotoUrl,
-      ':indicaciones': indicaciones,
-      ':bloque': bloque,
-      ':coordenadaX': coordenadaX,
-      ':coordenadaY': coordenadaY,
-      ':id': req.params.id
+    await db.execute({
+      sql: `UPDATE espacios SET nombre=?, tipo=?, piso=?, descripcion=?, fotoUrl=?, indicaciones=?, bloque=?, coordenadaX=?, coordenadaY=? WHERE id=?`,
+      args: [nombre, tipo, parseInt(piso), descripcion || '', fotoUrl || '', indicaciones || '', bloque, coordenadaX || 0, coordenadaY || 0, req.params.id]
     });
-    stmt.free();
-    await saveDb();
-
-    const checkStmt = db.prepare('SELECT * FROM espacios WHERE id = :id');
-    checkStmt.bind({ ':id': req.params.id });
-    let actualizado = null;
-    if (checkStmt.step()) actualizado = checkStmt.getAsObject();
-    checkStmt.free();
-    if (actualizado) {
-      actualizado.fotoUrl = formatFotoUrl(actualizado.fotoUrl, req);
-      res.json(actualizado);
-    } else {
-      res.status(404).json({ mensaje: 'No encontrado' });
+    const result = await db.execute({
+      sql: 'SELECT * FROM espacios WHERE id = ?',
+      args: [req.params.id]
+    });
+    if (result.rows.length === 0) {
+      return res.status(404).json({ mensaje: 'No encontrado' });
     }
+    const actualizado = result.rows[0];
+    actualizado.fotoUrl = formatFotoUrl(actualizado.fotoUrl, req);
+    res.json(actualizado);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -125,10 +91,10 @@ exports.update = async (req, res) => {
 exports.remove = async (req, res) => {
   try {
     const db = await getDb();
-    const stmt = db.prepare('DELETE FROM espacios WHERE id = :id');
-    stmt.run({ ':id': req.params.id });
-    stmt.free();
-    await saveDb();
+    await db.execute({
+      sql: 'DELETE FROM espacios WHERE id = ?',
+      args: [req.params.id]
+    });
     res.status(204).send();
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -362,20 +328,15 @@ exports.restaurarDatos = async (req, res) => {
       WHERE id = :id
     `);
 
-    for (const d of datos) {
-      stmt.run({
-        ':fotoUrl': d.fotoUrl || '',
-        ':descripcion': d.descripcion || '',
-        ':indicaciones': d.indicaciones || '',
-        ':id': d.id
+for (const d of datos) {
+      await db.execute({
+        sql: `UPDATE espacios SET fotoUrl = ?, descripcion = COALESCE(NULLIF(?,''), descripcion), indicaciones = COALESCE(NULLIF(?,''), indicaciones) WHERE id = ?`,
+        args: [d.fotoUrl || '', d.descripcion || '', d.indicaciones || '', d.id]
       });
     }
-    stmt.free();
 
-    await saveDb();
     res.json({ mensaje: "Datos restaurados correctamente", cantidad: datos.length });
   } catch (e) {
-    console.log(e);
     res.status(500).json({ error: e.message });
   }
 };
